@@ -22,17 +22,17 @@
 
 x-common-env: &common-env
   NODE_ENV: production
-  DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD:?missing}@postgres:5432/wined
+  DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD}@postgres:5432/wined
   REDIS_URL: redis://redis:6379
   S3_ENDPOINT: http://minio:9000
   S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-  S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?missing}
+  S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
   S3_REGION: us-east-1
   OBJECT_STORE_BUCKET: wined-uploads
-  JWT_SECRET: ${JWT_SECRET:?missing}
+  JWT_SECRET: ${JWT_SECRET}
   JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
-  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?missing}
-  COHERE_API_KEY: ${COHERE_API_KEY:?missing}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  COHERE_API_KEY: ${COHERE_API_KEY}
   GEMINI_API_KEY: ${GEMINI_API_KEY:-}
   EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-gemini}
   EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: wined
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missing}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: wined
     volumes:
       - wined_pg_data:/var/lib/postgresql/data
@@ -97,7 +97,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?missing}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - wined_minio_data:/data
     healthcheck:
@@ -123,9 +123,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD:?missing}@postgres:5432/wined
-      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:?missing}
-      SALT: ${LANGFUSE_SALT:?missing}
+      DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD}@postgres:5432/wined
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      SALT: ${LANGFUSE_SALT}
       NEXTAUTH_URL: https://langfuse.${WINED_HOST:-wined.app.15.237.213.46.nip.io}
       TELEMETRY_ENABLED: 'false'
     networks:
