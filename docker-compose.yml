@@ -15,7 +15,7 @@
 #   POSTHOG_API_KEY            phc_...
 #   APIFY_API_TOKEN            apify_api_...
 #   RESEND_API_KEY             re_...
-#   WINED_DOMAIN_SUFFIX        e.g. "15.237.213.46.nip.io"
+#   WINED_HOST                  e.g. "wined.app.15.237.213.46.nip.io" hoy, "wined.app" cuando compres dominio
 
 name: wined
 
@@ -32,7 +32,10 @@ x-common-env: &common-env
   JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?missing}
   COHERE_API_KEY: ${COHERE_API_KEY:?missing}
-  EMBEDDING_PROVIDER: cohere
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-gemini}
+  EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+  EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-}
   LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
   LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
   LANGFUSE_BASE_URL: http://langfuse:3000
@@ -40,7 +43,7 @@ x-common-env: &common-env
   POSTHOG_HOST: https://eu.posthog.com
   APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
-  WINED_API_URL: https://wined-api.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}
+  WINED_API_URL: https://api.${WINED_HOST:-wined.app.15.237.213.46.nip.io}
 
 services:
   # ────────────────────────────────────────────────────────────
@@ -102,7 +105,7 @@ services:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-minio.rule=Host(`wined-minio.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-minio.rule=Host(`minio.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-minio.entrypoints=web'
       - 'traefik.http.services.wined-minio.loadbalancer.server.port=9001'
 
@@ -119,13 +122,13 @@ services:
       DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD:?missing}@postgres:5432/wined
       NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:?missing}
       SALT: ${LANGFUSE_SALT:?missing}
-      NEXTAUTH_URL: https://wined-langfuse.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}
+      NEXTAUTH_URL: https://langfuse.${WINED_HOST:-wined.app.15.237.213.46.nip.io}
       TELEMETRY_ENABLED: 'false'
     networks:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-langfuse.rule=Host(`wined-langfuse.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-langfuse.rule=Host(`langfuse.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-langfuse.entrypoints=web'
       - 'traefik.http.services.wined-langfuse.loadbalancer.server.port=3000'
 
@@ -152,7 +155,7 @@ services:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-api.rule=Host(`wined-api.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-api.rule=Host(`api.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-api.entrypoints=web'
       - 'traefik.http.services.wined-api.loadbalancer.server.port=8787'
 
@@ -173,7 +176,7 @@ services:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-sommelier.rule=Host(`wined.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`) || Host(`wined-sommelier.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-sommelier.rule=Host(`${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-sommelier.entrypoints=web'
       - 'traefik.http.services.wined-sommelier.loadbalancer.server.port=3000'
 
@@ -194,7 +197,7 @@ services:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-cellar.rule=Host(`wined-cellar.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-cellar.rule=Host(`cellar.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-cellar.entrypoints=web'
       - 'traefik.http.services.wined-cellar.loadbalancer.server.port=3000'
 
@@ -215,7 +218,7 @@ services:
       - dokploy-network
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-distributor.rule=Host(`wined-distributor.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-distributor.rule=Host(`distributor.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
       - 'traefik.http.routers.wined-distributor.entrypoints=web'
       - 'traefik.http.services.wined-distributor.loadbalancer.server.port=3000'
 

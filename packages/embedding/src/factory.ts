@@ -1,6 +1,7 @@
 import { CohereEmbeddingProvider } from './cohere.js';
 import { OpenAIEmbeddingProvider } from './openai.js';
 import { VoyageEmbeddingProvider } from './voyage.js';
+import { GeminiEmbeddingProvider } from './gemini.js';
 import type { EmbeddingProvider } from './provider.js';
 
 function requireEnv(name: string): string {
@@ -20,6 +21,14 @@ export function createEmbeddingProvider(): EmbeddingProvider {
       return new OpenAIEmbeddingProvider(requireEnv('OPENAI_API_KEY'));
     case 'voyage':
       return new VoyageEmbeddingProvider(requireEnv('VOYAGE_API_KEY'));
+    case 'gemini': {
+      const opts: { model?: string; dimensions?: number } = {};
+      const model = process.env['EMBEDDING_MODEL'];
+      if (model) opts.model = model;
+      const dims = process.env['EMBEDDING_DIMENSIONS'];
+      if (dims) opts.dimensions = parseInt(dims, 10);
+      return new GeminiEmbeddingProvider(requireEnv('GEMINI_API_KEY'), opts);
+    }
     default:
       throw new Error(`Unknown EMBEDDING_PROVIDER: ${provider}`);
   }

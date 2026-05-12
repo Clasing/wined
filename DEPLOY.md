@@ -17,8 +17,8 @@
                                        │
         ┌────────────┬─────────────────┼──────────────┬────────────┐
         ▼            ▼                 ▼              ▼            ▼
- wined.…nip.io  wined-cellar.…  wined-distributor.…  wined-api.…  wined-langfuse.…
- (sommelier)    (cellar)        (distributor)        (Hono)       (observabilidad)
+ wined.app.…   cellar.wined.app.…  distributor.wined.app.…  api.wined.app.…  langfuse.wined.app.…
+ (sommelier)   (cellar)            (distributor)            (Hono)           (observabilidad)
         │            │                 │              │            │
         └────────────┴─────────────────┴──────────────┴────────────┘
                                        │
@@ -39,16 +39,18 @@
 
 ## Hostnames asignados
 
-| Servicio        | Host                                                      | Puerto interno | Pública         |
-| --------------- | --------------------------------------------------------- | -------------- | --------------- |
-| Sommelier web   | `wined.15.237.213.46.nip.io` (alias: `wined-sommelier.…`) | 3000           | ✅              |
-| Cellar web      | `wined-cellar.15.237.213.46.nip.io`                       | 3000           | ✅              |
-| Distributor web | `wined-distributor.15.237.213.46.nip.io`                  | 3000           | ✅              |
-| API (Hono)      | `wined-api.15.237.213.46.nip.io`                          | 8787           | ✅              |
-| Langfuse        | `wined-langfuse.15.237.213.46.nip.io`                     | 3000           | ✅ (admin only) |
-| Minio console   | `wined-minio.15.237.213.46.nip.io`                        | 9001           | ✅ (admin only) |
-| Postgres        | (interno)                                                 | 5432           | ❌              |
-| Redis           | (interno)                                                 | 6379           | ❌              |
+| Servicio        | Host                                         | Puerto interno | Pública         |
+| --------------- | -------------------------------------------- | -------------- | --------------- |
+| Sommelier web   | `wined.app.15.237.213.46.nip.io`             | 3000           | ✅              |
+| Cellar web      | `cellar.wined.app.15.237.213.46.nip.io`      | 3000           | ✅              |
+| Distributor web | `distributor.wined.app.15.237.213.46.nip.io` | 3000           | ✅              |
+| API (Hono)      | `api.wined.app.15.237.213.46.nip.io`         | 8787           | ✅              |
+| Langfuse        | `langfuse.wined.app.15.237.213.46.nip.io`    | 3000           | ✅ (admin only) |
+| Minio console   | `minio.wined.app.15.237.213.46.nip.io`       | 9001           | ✅ (admin only) |
+| Postgres        | (interno)                                    | 5432           | ❌              |
+| Redis           | (interno)                                    | 6379           | ❌              |
+
+> Cuando se compre el dominio `wined.app`, basta cambiar `WINED_HOST=wined.app` en Dokploy y los hosts pasan a ser `wined.app`, `cellar.wined.app`, `api.wined.app`, etc. Cero cambios de código.
 
 ## Pasos de deploy (one-time setup)
 
@@ -126,7 +128,8 @@ APIFY_API_TOKEN=apify_api_xxxxxxxx
 RESEND_API_KEY=re_xxxxxxxx
 
 # Domain
-WINED_DOMAIN_SUFFIX=15.237.213.46.nip.io
+# Hoy nip.io; cuando se compre wined.app pon "wined.app"
+WINED_HOST=wined.app.15.237.213.46.nip.io
 ```
 
 ### 5. Deploy
@@ -148,7 +151,7 @@ docker compose -p wined exec api node packages/curators/dist/cli.js catalog
 O via API (admin):
 
 ```bash
-curl -X POST https://wined-api.15.237.213.46.nip.io/v1/admin/curate/regulation \
+curl -X POST https://api.wined.app.15.237.213.46.nip.io/v1/admin/curate/regulation \
   -H "Authorization: Bearer <admin-jwt-de-/api/v1/auth/login>"
 ```
 
