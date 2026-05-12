@@ -140,9 +140,7 @@ services:
   # API — Hono backend
   # ────────────────────────────────────────────────────────────
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/clasing/wined-api:${WINED_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -167,9 +165,7 @@ services:
   # SOMMELIER WEB — Next.js (vertical sala)
   # ────────────────────────────────────────────────────────────
   sommelier-web:
-    build:
-      context: .
-      dockerfile: apps/sommelier-web/Dockerfile
+    image: ghcr.io/clasing/wined-sommelier-web:${WINED_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       - api
@@ -188,9 +184,7 @@ services:
   # CELLAR WEB — Next.js (vertical bodega/enólogo)
   # ────────────────────────────────────────────────────────────
   cellar-web:
-    build:
-      context: .
-      dockerfile: apps/cellar-web/Dockerfile
+    image: ghcr.io/clasing/wined-cellar-web:${WINED_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       - api
@@ -209,9 +203,7 @@ services:
   # DISTRIBUTOR WEB — Next.js (vertical distribución)
   # ────────────────────────────────────────────────────────────
   distributor-web:
-    build:
-      context: .
-      dockerfile: apps/distributor-web/Dockerfile
+    image: ghcr.io/clasing/wined-distributor-web:${WINED_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       - api
