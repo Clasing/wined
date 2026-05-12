@@ -59,7 +59,10 @@ services:
       POSTGRES_DB: wined
     volumes:
       - wined_pg_data:/var/lib/postgresql/data
-      - ./infra/sql:/docker-entrypoint-initdb.d:ro
+    # NOTE: SQL migrations under infra/sql/ must be applied via:
+    #   docker compose exec -T postgres psql -U wined -d wined < infra/sql/0001_init.sql
+    # (bind-mount removed because Dokploy's working dir for compose differs
+    # from the repo clone root — relative paths don't resolve reliably.)
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U wined -d wined']
       interval: 10s
