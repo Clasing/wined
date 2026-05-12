@@ -1,0 +1,84 @@
+name: wined
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: wined_postgres
+    environment:
+      POSTGRES_USER: wined
+      POSTGRES_PASSWORD: wined
+      POSTGRES_DB: wined
+    ports:
+      - "5432:5432"
+    volumes:
+      - wined_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wined -d wined"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - wined_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: wined_redis
+    ports:
+      - "6390:6379"
+    volumes:
+      - wined_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - wined_net
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: wined_langfuse
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3010:3000"
+    environment:
+      DATABASE_URL: postgresql://wined:wined@postgres:5432/wined
+      NEXTAUTH_SECRET: dev-nextauth-secret-change-me
+      SALT: dev-salt-change-me
+      NEXTAUTH_URL: http://localhost:3010
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: wined-dev
+      LANGFUSE_INIT_PROJECT_ID: wined
+    networks:
+      - wined_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: wined_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - wined_minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - wined_net
+
+volumes:
+  wined_pg_data:
+  wined_redis_data:
+  wined_minio_data:
+
+networks:
+  wined_net:
+    driver: bridge

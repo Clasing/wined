@@ -1,0 +1,36 @@
+name: posthog-sync-cron
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.11.0"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build analytics package
+        run: pnpm --filter @wined/db build && pnpm --filter @wined/analytics build
+
+      - name: Run PostHog retro-sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+        run: |
+          node -e "import('./packages/analytics/dist/sync-cron.js').then(m => m.runPosthogSyncCron()).then(r => console.log('sync result:', JSON.stringify(r))).catch(e => { console.error(e); process.exit(1); })"

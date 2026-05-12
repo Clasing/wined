@@ -1,0 +1,32 @@
+{
+  "name": "@wined/analytics",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./sync-cron": {
+      "types": "./dist/sync-cron.d.ts",
+      "import": "./dist/sync-cron.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "posthog-node": "^4.2.0",
+    "drizzle-orm": "0.33.0",
+    "@wined/db": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4",
+    "@types/node": "20.14.0"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "regulation_seed": [
+    {
+      "reg_code": "REG-UE-1308-2013",
+      "title": "Reglamento (UE) 1308/2013 - OCM única",
+      "jurisdiction": "EU",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32013R1308",
+      "format": "html"
+    },
+    {
+      "reg_code": "REG-UE-2019-33",
+      "title": "Reglamento Delegado (UE) 2019/33 - Etiquetado",
+      "jurisdiction": "EU",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32019R0033",
+      "format": "html"
+    },
+    {
+      "reg_code": "REG-UE-2019-934",
+      "title": "Reglamento Delegado (UE) 2019/934 - Prácticas enológicas",
+      "jurisdiction": "EU",
+      "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:32019R0934",
+      "format": "html"
+    },
+    {
+      "reg_code": "OIV-2-1-18",
+      "title": "OIV §2.1.18 - SO₂ activo, cálculo y límites",
+      "jurisdiction": "OIV",
+      "url": "https://www.oiv.int/standards/international-code-of-oenological-practices",
+      "format": "pdf"
+    },
+    {
+      "reg_code": "OIV-3-X",
+      "title": "OIV §3 - Ajustes de acidez",
+      "jurisdiction": "OIV",
+      "url": "https://www.oiv.int/standards/international-code-of-oenological-practices",
+      "format": "pdf"
+    },
+    {
+      "reg_code": "LEY-24-2003-ES",
+      "title": "Ley 24/2003 de la Viña y el Vino",
+      "jurisdiction": "ES",
+      "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13864",
+      "format": "html"
+    }
+  ]
+}
