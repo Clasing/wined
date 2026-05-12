@@ -39,16 +39,16 @@
 
 ## Hostnames asignados
 
-| Servicio | Host | Puerto interno | Pública |
-|---|---|---|---|
-| Sommelier web | `wined.15.237.213.46.nip.io` (alias: `wined-sommelier.…`) | 3000 | ✅ |
-| Cellar web | `wined-cellar.15.237.213.46.nip.io` | 3000 | ✅ |
-| Distributor web | `wined-distributor.15.237.213.46.nip.io` | 3000 | ✅ |
-| API (Hono) | `wined-api.15.237.213.46.nip.io` | 8787 | ✅ |
-| Langfuse | `wined-langfuse.15.237.213.46.nip.io` | 3000 | ✅ (admin only) |
-| Minio console | `wined-minio.15.237.213.46.nip.io` | 9001 | ✅ (admin only) |
-| Postgres | (interno) | 5432 | ❌ |
-| Redis | (interno) | 6379 | ❌ |
+| Servicio        | Host                                                      | Puerto interno | Pública         |
+| --------------- | --------------------------------------------------------- | -------------- | --------------- |
+| Sommelier web   | `wined.15.237.213.46.nip.io` (alias: `wined-sommelier.…`) | 3000           | ✅              |
+| Cellar web      | `wined-cellar.15.237.213.46.nip.io`                       | 3000           | ✅              |
+| Distributor web | `wined-distributor.15.237.213.46.nip.io`                  | 3000           | ✅              |
+| API (Hono)      | `wined-api.15.237.213.46.nip.io`                          | 8787           | ✅              |
+| Langfuse        | `wined-langfuse.15.237.213.46.nip.io`                     | 3000           | ✅ (admin only) |
+| Minio console   | `wined-minio.15.237.213.46.nip.io`                        | 9001           | ✅ (admin only) |
+| Postgres        | (interno)                                                 | 5432           | ❌              |
+| Redis           | (interno)                                                 | 6379           | ❌              |
 
 ## Pasos de deploy (one-time setup)
 
@@ -68,12 +68,14 @@ git push -u origin main
 ### 2. Generar SSH deploy key
 
 En Dokploy → **SSH Keys** → "Add SSH Key":
+
 - Name: `wined-deploy`
 - Description: "Deploy key para github.com/Clasing/wined"
 - Click "Generate" (ED25519)
 - Copia la public key
 
 En GitHub:
+
 ```bash
 gh api repos/Clasing/wined/keys -X POST \
   -f title='dokploy-wined-deploy' \
@@ -86,6 +88,7 @@ gh api repos/Clasing/wined/keys -X POST \
 En Dokploy → "Create Project" → name: `Wined`.
 
 Dentro del proyecto, "Create Service" → **Compose** (no "Application"):
+
 - Name: `wined-stack`
 - Provider: **Git** (no GitHub App)
 - Repository URL: `git@github.com:Clasing/wined.git`
@@ -105,9 +108,9 @@ MINIO_ROOT_PASSWORD=<openssl rand -hex 24>
 LANGFUSE_NEXTAUTH_SECRET=<openssl rand -hex 32>
 LANGFUSE_SALT=<openssl rand -hex 16>
 
-# Clerk (clerk.com → Wined app)
-CLERK_SECRET_KEY=sk_test_xxxxxxxx
-CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxx
+# JWT (32+ chars cada uno; generar con openssl rand -hex 32)
+JWT_SECRET=<openssl rand -hex 32>
+JWT_REFRESH_SECRET=<openssl rand -hex 32>
 
 # LLM providers
 ANTHROPIC_API_KEY=sk-ant-xxxxxxxx
@@ -143,14 +146,16 @@ docker compose -p wined exec api node packages/curators/dist/cli.js catalog
 ```
 
 O via API (admin):
+
 ```bash
 curl -X POST https://wined-api.15.237.213.46.nip.io/v1/admin/curate/regulation \
-  -H "Authorization: Bearer <clerk-admin-jwt>"
+  -H "Authorization: Bearer <admin-jwt-de-/api/v1/auth/login>"
 ```
 
 ### 7. Cron jobs (GitHub Actions)
 
 Los workflows en `.github/workflows/` ya están listos:
+
 - `corpus-reviewer-cron.yml` — semanal lunes 03:00 UTC
 - `gdpr-hard-delete-cron.yml` — diario 04:00 UTC
 - `citation-validator-cron.yml` — diario 05:00 UTC
@@ -159,6 +164,7 @@ Los workflows en `.github/workflows/` ya están listos:
 - `scheduled-ops-reminder-cron.yml` — horario
 
 Configura los secrets en GitHub Settings → Actions:
+
 - `DATABASE_URL_PROD`
 - `REDIS_URL_PROD`
 - `ANTHROPIC_API_KEY`, `COHERE_API_KEY`, `LANGFUSE_*`, `POSTHOG_*`, `RESEND_API_KEY`
@@ -209,13 +215,13 @@ pnpm --filter @wined/sommelier-web dev   # http://localhost:3100
 
 ## Diferencias vs. el patrón de `role-play-clasing`
 
-| Aspecto | role-play-clasing | Wined |
-|---|---|---|
-| Stack | Single Express + SQLite | Monorepo Turborepo: 4 apps + 10 packages |
-| DB | SQLite file en volumen | Postgres + pgvector + RLS |
-| Dockerfiles | 1 en root | 4 (api + 3 web), multi-stage con `turbo prune` |
-| Compose | Sin (deploy directo) | `docker-compose.yml` para Dokploy + `infra/docker-compose.dev.yml` para dev |
-| Observabilidad | Logs Dokploy | Langfuse (LLM) + PostHog (producto) |
-| Auth | Custom | Clerk B2B (organizations) |
+| Aspecto        | role-play-clasing       | Wined                                                                       |
+| -------------- | ----------------------- | --------------------------------------------------------------------------- |
+| Stack          | Single Express + SQLite | Monorepo Turborepo: 4 apps + 10 packages                                    |
+| DB             | SQLite file en volumen  | Postgres + pgvector + RLS                                                   |
+| Dockerfiles    | 1 en root               | 4 (api + 3 web), multi-stage con `turbo prune`                              |
+| Compose        | Sin (deploy directo)    | `docker-compose.yml` para Dokploy + `infra/docker-compose.dev.yml` para dev |
+| Observabilidad | Logs Dokploy            | Langfuse (LLM) + PostHog (producto)                                         |
+| Auth           | Custom JWT              | Custom JWT (mismo patrón que Fundae/SGC)                                    |
 
 Resto idéntico (Dokploy + Traefik + nip.io + deploy key SSH + GitHub Actions cron).

@@ -1,22 +1,15 @@
-import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
+import './globals.css';
+import type { ReactNode } from 'react';
 
-export const metadata: Metadata = {
-  title: "Wined — Distribuidor",
-  description: "El copiloto del vino — distribución",
+export const metadata = {
+  title: 'Wined — Distribuidor',
+  description: 'El copiloto agéntico del vino — distribución',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <ClerkProvider>
-      <html lang="es">
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="es">
+      <body className="min-h-screen bg-white text-gray-900">{children}</body>
+    </html>
   );
 }

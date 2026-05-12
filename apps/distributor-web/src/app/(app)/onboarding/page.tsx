@@ -1,12 +1,29 @@
 'use client';
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 const STEPS = [
-  { id: 'signup_vertical', title: 'Vertical distribuidor', desc: 'Vamos a configurar tu portfolio.' },
+  {
+    id: 'signup_vertical',
+    title: 'Vertical distribuidor',
+    desc: 'Vamos a configurar tu portfolio.',
+  },
   { id: 'upload_catalog', title: 'Sube tu catálogo masivo', desc: 'Excel/CSV con tus referencias' },
-  { id: 'map_columns', title: 'Mapea las columnas', desc: 'Productor, nombre, añada, DO, precio, stock' },
-  { id: 'try_nl_search', title: 'Prueba la búsqueda NL', desc: '"blancos atlánticos < 30€ en stock"' },
-  { id: 'gen_demo_sheet', title: 'Genera tu primera ficha comercial', desc: 'Para un cliente HoReCa de demo' },
+  {
+    id: 'map_columns',
+    title: 'Mapea las columnas',
+    desc: 'Productor, nombre, añada, DO, precio, stock',
+  },
+  {
+    id: 'try_nl_search',
+    title: 'Prueba la búsqueda NL',
+    desc: '"blancos atlánticos < 30€ en stock"',
+  },
+  {
+    id: 'gen_demo_sheet',
+    title: 'Genera tu primera ficha comercial',
+    desc: 'Para un cliente HoReCa de demo',
+  },
   { id: 'invite_sales_team', title: 'Invita a tu equipo comercial', desc: 'Opcional' },
 ] as const;
 
@@ -18,17 +35,17 @@ export default function DistributorOnboardingPage(): JSX.Element {
 
   async function completeStep(): Promise<void> {
     if (!current) return;
-    await fetch('/api/onboarding/step', {
+    await apiFetch('/api/onboarding/step', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ product: 'distributor', step: current.id }),
     });
     if (stepIdx + 1 < STEPS.length) setStepIdx(stepIdx + 1);
-    else await fetch('/api/onboarding/complete', { method: 'POST' });
+    else await apiFetch('/api/onboarding/complete', { method: 'POST' });
   }
 
   async function tryNlSearch(): Promise<void> {
-    const res = await fetch('/api/chat', {
+    const res = await apiFetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: searchQuery, agent: 'catalog-nl' }),
@@ -46,7 +63,11 @@ export default function DistributorOnboardingPage(): JSX.Element {
           <div
             key={s.id}
             className={`h-2 flex-1 rounded-full ${
-              i < stepIdx ? 'bg-distributor-500' : i === stepIdx ? 'bg-distributor-200' : 'bg-gray-200'
+              i < stepIdx
+                ? 'bg-distributor-500'
+                : i === stepIdx
+                  ? 'bg-distributor-200'
+                  : 'bg-gray-200'
             }`}
           />
         ))}
@@ -74,7 +95,9 @@ export default function DistributorOnboardingPage(): JSX.Element {
                 Buscar
               </button>
               {searchResults && (
-                <pre className="text-sm bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{searchResults}</pre>
+                <pre className="text-sm bg-gray-50 p-3 rounded-md whitespace-pre-wrap">
+                  {searchResults}
+                </pre>
               )}
             </div>
           )}

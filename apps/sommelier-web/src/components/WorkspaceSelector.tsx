@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type Workspace = { id: string; name: string; kind?: string };
 
@@ -13,7 +14,7 @@ export function WorkspaceSelector({
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
   useEffect(() => {
-    fetch('/api/workspaces')
+    apiFetch('/api/workspaces')
       .then((r) => r.json())
       .then((d: { rows?: Workspace[] }) => setWorkspaces(d.rows ?? []))
       .catch(() => setWorkspaces([]));

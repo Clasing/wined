@@ -1,16 +1,16 @@
 import type { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 
 const API_URL = process.env['WINED_API_URL'] ?? 'http://localhost:8787';
 
-export async function GET(_req: NextRequest): Promise<Response> {
-  const { getToken } = await auth();
-  const token = await getToken();
+export async function GET(req: NextRequest): Promise<Response> {
+  const auth = req.headers.get('authorization') ?? '';
+  const cookieHeader = req.headers.get('cookie') ?? '';
 
   const res = await fetch(`${API_URL}/v1/onboarding/state`, {
     method: 'GET',
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(auth ? { Authorization: auth } : {}),
+      cookie: cookieHeader,
     },
     cache: 'no-store',
   });

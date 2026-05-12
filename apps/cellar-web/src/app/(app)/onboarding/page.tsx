@@ -1,14 +1,31 @@
 'use client';
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 const STEPS = [
   { id: 'signup_vertical', title: 'Bienvenido al cellar', desc: 'Vertical Cellar seleccionado.' },
   { id: 'business_type', title: 'Tipo', desc: 'Bodega / consultoría / investigación' },
   { id: 'do_region', title: 'DO o región principal', desc: 'Cargaremos el pliego al corpus' },
-  { id: 'create_demo_lot', title: 'Crea un lote demo', desc: 'Variedad + depósito + fecha vendimia simulada' },
-  { id: 'upload_doc_optional', title: 'Sube un documento técnico (opcional)', desc: 'Ficha de análisis, ficha técnica' },
-  { id: 'first_technical_question', title: 'Tu primera pregunta técnica', desc: 'Ej: dosis SO₂ activo para 5 mg/L a pH 3.4' },
-  { id: 'config_calendar', title: 'Calendario de operaciones', desc: 'Activa recordatorios de sulfitados, trasiegos, análisis' },
+  {
+    id: 'create_demo_lot',
+    title: 'Crea un lote demo',
+    desc: 'Variedad + depósito + fecha vendimia simulada',
+  },
+  {
+    id: 'upload_doc_optional',
+    title: 'Sube un documento técnico (opcional)',
+    desc: 'Ficha de análisis, ficha técnica',
+  },
+  {
+    id: 'first_technical_question',
+    title: 'Tu primera pregunta técnica',
+    desc: 'Ej: dosis SO₂ activo para 5 mg/L a pH 3.4',
+  },
+  {
+    id: 'config_calendar',
+    title: 'Calendario de operaciones',
+    desc: 'Activa recordatorios de sulfitados, trasiegos, análisis',
+  },
 ] as const;
 
 const DOS = [
@@ -30,18 +47,18 @@ export default function CellarOnboardingPage(): JSX.Element {
     const data: Record<string, unknown> = {};
     if (current.id === 'do_region') data['do_code'] = doSelected;
 
-    await fetch('/api/onboarding/step', {
+    await apiFetch('/api/onboarding/step', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ product: 'cellar', step: current.id, data }),
     });
 
     if (stepIdx + 1 < STEPS.length) setStepIdx(stepIdx + 1);
-    else await fetch('/api/onboarding/complete', { method: 'POST' });
+    else await apiFetch('/api/onboarding/complete', { method: 'POST' });
   }
 
   async function askFirstQuestion(): Promise<void> {
-    const res = await fetch('/api/chat', {
+    const res = await apiFetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -8,8 +8,8 @@
 #   POSTGRES_PASSWORD          random strong secret
 #   ANTHROPIC_API_KEY          sk-ant-...
 #   COHERE_API_KEY             ...
-#   CLERK_SECRET_KEY           sk_test_... / sk_live_...
-#   CLERK_PUBLISHABLE_KEY      pk_test_... / pk_live_...   (read at build time too)
+#   JWT_SECRET                 32+ chars (openssl rand -hex 32)
+#   JWT_REFRESH_SECRET         32+ chars (openssl rand -hex 32), optional
 #   LANGFUSE_PUBLIC_KEY        pk-lf-...
 #   LANGFUSE_SECRET_KEY        sk-lf-...
 #   POSTHOG_API_KEY            phc_...
@@ -28,9 +28,8 @@ x-common-env: &common-env
   S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?missing}
   S3_REGION: us-east-1
   OBJECT_STORE_BUCKET: wined-uploads
-  CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:?missing}
-  CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?missing}
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?missing}
+  JWT_SECRET: ${JWT_SECRET:?missing}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?missing}
   COHERE_API_KEY: ${COHERE_API_KEY:?missing}
   EMBEDDING_PROVIDER: cohere
@@ -58,7 +57,7 @@ services:
       - wined_pg_data:/var/lib/postgresql/data
       - ./infra/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wined -d wined"]
+      test: ['CMD-SHELL', 'pg_isready -U wined -d wined']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -75,7 +74,7 @@ services:
     volumes:
       - wined_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -95,17 +94,17 @@ services:
     volumes:
       - wined_minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
       interval: 30s
       timeout: 5s
       retries: 5
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-minio.rule=Host(`wined-minio.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-minio.entrypoints=web"
-      - "traefik.http.services.wined-minio.loadbalancer.server.port=9001"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-minio.rule=Host(`wined-minio.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-minio.entrypoints=web'
+      - 'traefik.http.services.wined-minio.loadbalancer.server.port=9001'
 
   # ────────────────────────────────────────────────────────────
   # LANGFUSE — LLM observability
@@ -121,14 +120,14 @@ services:
       NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET:?missing}
       SALT: ${LANGFUSE_SALT:?missing}
       NEXTAUTH_URL: https://wined-langfuse.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}
-      TELEMETRY_ENABLED: "false"
+      TELEMETRY_ENABLED: 'false'
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-langfuse.rule=Host(`wined-langfuse.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-langfuse.entrypoints=web"
-      - "traefik.http.services.wined-langfuse.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-langfuse.rule=Host(`wined-langfuse.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-langfuse.entrypoints=web'
+      - 'traefik.http.services.wined-langfuse.loadbalancer.server.port=3000'
 
   # ────────────────────────────────────────────────────────────
   # API — Hono backend
@@ -148,14 +147,14 @@ services:
     environment:
       <<: *common-env
       PORT: 8787
-      WINED_START_WORKERS: "1"
+      WINED_START_WORKERS: '1'
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-api.rule=Host(`wined-api.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-api.entrypoints=web"
-      - "traefik.http.services.wined-api.loadbalancer.server.port=8787"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-api.rule=Host(`wined-api.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-api.entrypoints=web'
+      - 'traefik.http.services.wined-api.loadbalancer.server.port=8787'
 
   # ────────────────────────────────────────────────────────────
   # SOMMELIER WEB — Next.js (vertical sala)
@@ -164,8 +163,6 @@ services:
     build:
       context: .
       dockerfile: apps/sommelier-web/Dockerfile
-      args:
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?missing}
     restart: unless-stopped
     depends_on:
       - api
@@ -175,10 +172,10 @@ services:
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-sommelier.rule=Host(`wined.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`) || Host(`wined-sommelier.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-sommelier.entrypoints=web"
-      - "traefik.http.services.wined-sommelier.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-sommelier.rule=Host(`wined.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`) || Host(`wined-sommelier.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-sommelier.entrypoints=web'
+      - 'traefik.http.services.wined-sommelier.loadbalancer.server.port=3000'
 
   # ────────────────────────────────────────────────────────────
   # CELLAR WEB — Next.js (vertical bodega/enólogo)
@@ -187,8 +184,6 @@ services:
     build:
       context: .
       dockerfile: apps/cellar-web/Dockerfile
-      args:
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?missing}
     restart: unless-stopped
     depends_on:
       - api
@@ -198,10 +193,10 @@ services:
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-cellar.rule=Host(`wined-cellar.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-cellar.entrypoints=web"
-      - "traefik.http.services.wined-cellar.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-cellar.rule=Host(`wined-cellar.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-cellar.entrypoints=web'
+      - 'traefik.http.services.wined-cellar.loadbalancer.server.port=3000'
 
   # ────────────────────────────────────────────────────────────
   # DISTRIBUTOR WEB — Next.js (vertical distribución)
@@ -210,8 +205,6 @@ services:
     build:
       context: .
       dockerfile: apps/distributor-web/Dockerfile
-      args:
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?missing}
     restart: unless-stopped
     depends_on:
       - api
@@ -221,10 +214,10 @@ services:
     networks:
       - dokploy-network
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wined-distributor.rule=Host(`wined-distributor.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)"
-      - "traefik.http.routers.wined-distributor.entrypoints=web"
-      - "traefik.http.services.wined-distributor.loadbalancer.server.port=3000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.wined-distributor.rule=Host(`wined-distributor.${WINED_DOMAIN_SUFFIX:-15.237.213.46.nip.io}`)'
+      - 'traefik.http.routers.wined-distributor.entrypoints=web'
+      - 'traefik.http.services.wined-distributor.loadbalancer.server.port=3000'
 
 volumes:
   wined_pg_data:

@@ -13,7 +13,6 @@
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "@clerk/nextjs": "^5.7.0",
     "tailwindcss": "^3.4.10",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",

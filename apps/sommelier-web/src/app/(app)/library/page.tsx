@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type WineList = {
   id: string;
@@ -15,7 +16,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/sommelier/wine-lists')
+    apiFetch('/api/sommelier/wine-lists')
       .then((r) => r.json())
       .then((d) => {
         setLists(d.rows ?? []);
@@ -24,8 +25,8 @@ export default function LibraryPage() {
   }, []);
 
   async function activate(id: string) {
-    await fetch(`/api/sommelier/wine-lists/${id}/activate`, { method: 'POST' });
-    const r = await fetch('/api/sommelier/wine-lists').then((r) => r.json());
+    await apiFetch(`/api/sommelier/wine-lists/${id}/activate`, { method: 'POST' });
+    const r = await apiFetch('/api/sommelier/wine-lists').then((r) => r.json());
     setLists(r.rows ?? []);
   }
 

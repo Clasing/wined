@@ -3,7 +3,15 @@ export type {
   AuthRole,
   AuthProduct,
   AuthOutputLanguage,
-} from "./types.js";
-export { clerkAuth, type ClerkAuthOptions } from "./middleware.js";
-export { getAuth } from "./tenant.js";
-export { clerkClient, verifyToken } from "./clerk-server.js";
+  AuthKbPreference,
+} from './types.js';
+export {
+  signAccessToken,
+  verifyAccessToken,
+  ACCESS_TTL_SEC_EXPORT,
+  REFRESH_TTL_SEC_EXPORT,
+  type AccessClaims,
+} from './jwt.js';
+export { hashPassword, verifyPassword } from './password.js';
+export { jwtAuth, type JwtAuthOptions } from './middleware.js';
+export { getAuth } from './tenant.js';

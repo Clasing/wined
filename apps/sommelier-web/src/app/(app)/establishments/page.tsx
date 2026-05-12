@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type CrossRow = {
   id: string;
@@ -13,7 +14,7 @@ export default function EstablishmentsPage() {
   const [rows, setRows] = useState<CrossRow[]>([]);
 
   useEffect(() => {
-    fetch('/api/workspaces/cross-report')
+    apiFetch('/api/workspaces/cross-report')
       .then((r) => r.json())
       .then((d: { rows?: CrossRow[] }) => setRows(d.rows ?? []))
       .catch(() => setRows([]));
@@ -22,9 +23,7 @@ export default function EstablishmentsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">Establecimientos</h1>
-      <p className="text-gray-600 mb-6">
-        Reporte agregado de tus restaurantes / hoteles.
-      </p>
+      <p className="text-gray-600 mb-6">Reporte agregado de tus restaurantes / hoteles.</p>
 
       <div className="rounded-md border overflow-hidden">
         <table className="w-full text-sm">

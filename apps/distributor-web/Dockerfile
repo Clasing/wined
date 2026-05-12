@@ -22,7 +22,6 @@ WORKDIR /repo
 COPY --from=deps /repo/ ./
 COPY --from=pruner /repo/out/full/ ./
 COPY tsconfig.base.json ./tsconfig.base.json
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder_replace_at_runtime_xxxxxxxxxxxxxxxxxxx
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo build --filter=@wined/distributor-web...
 

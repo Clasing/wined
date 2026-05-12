@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 type WineCard = {
@@ -28,7 +29,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await apiFetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: user.content, serviceMode }),
@@ -110,10 +111,7 @@ export default function ChatPage() {
       {canvasWine && (
         <aside className="w-80 border-l pl-4">
           <div className="sticky top-0">
-            <button
-              onClick={() => setCanvasWine(null)}
-              className="mb-2 text-xs text-gray-500"
-            >
+            <button onClick={() => setCanvasWine(null)} className="mb-2 text-xs text-gray-500">
               Cerrar →
             </button>
             <h2 className="mb-2 text-lg font-semibold">{canvasWine.name}</h2>

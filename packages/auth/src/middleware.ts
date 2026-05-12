@@ -1,148 +1,127 @@
-import type { MiddlewareHandler } from "hono";
-import { and, eq } from "drizzle-orm";
-import { memberships, organizations, users, type DbClient } from "@wined/db";
-import { verifyToken } from "./clerk-server.js";
+import type { MiddlewareHandler } from 'hono';
+import { and, eq } from 'drizzle-orm';
+import { memberships, organizations, type DbClient } from '@wined/db';
+import { verifyAccessToken } from './jwt.js';
 import type {
   AuthCtx,
   AuthKbPreference,
   AuthOutputLanguage,
   AuthProduct,
   AuthRole,
-} from "./types.js";
+} from './types.js';
 
-type DbRole = "owner" | "admin" | "member" | "viewer" | "external";
+type DbRole = 'owner' | 'admin' | 'member' | 'viewer' | 'external';
 
-function mapRole(dbRole: DbRole): AuthRole {
-  switch (dbRole) {
-    case "owner":
-    case "admin":
-      return "admin";
-    case "member":
-      return "editor";
-    case "viewer":
-    case "external":
-    default:
-      return "viewer";
-  }
-}
+const ROLE_MAP: Record<DbRole, AuthRole> = {
+  owner: 'admin',
+  admin: 'admin',
+  member: 'editor',
+  viewer: 'viewer',
+  external: 'viewer',
+};
 
 function resolveLanguage(
   acceptLanguage: string | undefined,
   cookieLang: string | undefined,
-  orgDefault: string,
 ): AuthOutputLanguage {
-  const candidates = [cookieLang, acceptLanguage?.split(",")[0]?.split("-")[0], orgDefault];
-  for (const c of candidates) {
-    if (c === "es" || c === "en") return c;
-  }
-  return "es";
+  if (cookieLang === 'en' || cookieLang === 'es') return cookieLang;
+  const first = acceptLanguage?.split(',')[0]?.split('-')[0]?.toLowerCase();
+  if (first === 'en') return 'en';
+  return 'es';
 }
 
 function parseCookie(header: string | undefined, name: string): string | undefined {
   if (!header) return undefined;
-  const parts = header.split(";").map((p) => p.trim());
+  const parts = header.split(';').map((p) => p.trim());
   for (const part of parts) {
-    const idx = part.indexOf("=");
+    const idx = part.indexOf('=');
     if (idx === -1) continue;
-    const k = part.slice(0, idx);
-    if (k === name) return decodeURIComponent(part.slice(idx + 1));
+    if (part.slice(0, idx) === name) {
+      return decodeURIComponent(part.slice(idx + 1));
+    }
   }
   return undefined;
 }
 
-export type ClerkAuthOptions = {
+export type JwtAuthOptions = {
   db: DbClient;
+  secret: string;
 };
 
 /**
  * Hono middleware that:
- *  - validates the `Authorization: Bearer <jwt>` header against Clerk
- *  - resolves internal organization + user rows
- *  - resolves the membership role
- *  - resolves output language (cookie > Accept-Language > org default > "es")
- *  - exposes the resulting `AuthCtx` via `c.set("auth", ...)`
- *
- * Responses:
- *  - 401 if token missing or invalid
- *  - 403 if org unknown or user not a member of the org
+ *  - validates `Authorization: Bearer <jwt>` using HS256
+ *  - re-checks org existence and membership on every request
+ *  - resolves output language (cookie > Accept-Language > "es")
+ *  - exposes `AuthCtx` via `c.set("auth", ...)`
  */
-export function clerkAuth(options: ClerkAuthOptions): MiddlewareHandler {
-  const { db } = options;
+export function jwtAuth(options: JwtAuthOptions): MiddlewareHandler {
+  const { db, secret } = options;
   return async (c, next) => {
-    const authHeader = c.req.header("Authorization") ?? c.req.header("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return c.json({ error: "missing_bearer_token" }, 401);
+    const authHeader = c.req.header('Authorization') ?? c.req.header('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: 'missing_bearer_token' }, 401);
     }
-    const token = authHeader.slice("Bearer ".length).trim();
+    const token = authHeader.slice('Bearer '.length).trim();
     if (!token) {
-      return c.json({ error: "missing_bearer_token" }, 401);
+      return c.json({ error: 'missing_bearer_token' }, 401);
     }
 
-    let payload: Awaited<ReturnType<typeof verifyToken>>;
+    let claims;
     try {
-      payload = await verifyToken(token);
+      claims = await verifyAccessToken(token, secret);
     } catch {
-      return c.json({ error: "invalid_token" }, 401);
+      return c.json({ error: 'invalid_token' }, 401);
     }
 
-    const clerkUserId = (payload as { sub?: unknown }).sub;
-    const clerkOrgId = (payload as { org_id?: unknown }).org_id;
-
-    if (typeof clerkUserId !== "string" || typeof clerkOrgId !== "string") {
-      return c.json({ error: "token_missing_org_or_user" }, 401);
+    if (
+      typeof claims.sub !== 'string' ||
+      typeof claims.org !== 'string' ||
+      typeof claims.email !== 'string'
+    ) {
+      return c.json({ error: 'invalid_token_claims' }, 401);
     }
 
     const orgRow = await db
       .select({
         id: organizations.id,
         product: organizations.product,
-        outputLanguage: organizations.outputLanguage,
         kbPreference: organizations.kbPreference,
       })
       .from(organizations)
-      .where(eq(organizations.clerkOrgId, clerkOrgId))
+      .where(eq(organizations.id, claims.org))
       .limit(1);
-
     const org = orgRow[0];
     if (!org) {
-      return c.json({ error: "organization_not_found" }, 403);
+      return c.json({ error: 'organization_not_found' }, 403);
     }
 
-    const userRow = await db
-      .select({
-        userId: users.id,
-        role: memberships.role,
-      })
-      .from(users)
-      .innerJoin(memberships, eq(memberships.userId, users.id))
-      .where(
-        and(eq(users.clerkUserId, clerkUserId), eq(memberships.organizationId, org.id)),
-      )
+    const memRow = await db
+      .select({ role: memberships.role })
+      .from(memberships)
+      .where(and(eq(memberships.organizationId, claims.org), eq(memberships.userId, claims.sub)))
       .limit(1);
-
-    const membership = userRow[0];
-    if (!membership) {
-      return c.json({ error: "not_a_member" }, 403);
+    const mem = memRow[0];
+    if (!mem) {
+      return c.json({ error: 'membership_revoked' }, 403);
     }
 
     const outputLanguage = resolveLanguage(
-      c.req.header("Accept-Language"),
-      parseCookie(c.req.header("Cookie"), "wined_lang"),
-      org.outputLanguage,
+      c.req.header('Accept-Language'),
+      parseCookie(c.req.header('Cookie'), 'wined_lang'),
     );
 
-    const authCtx: AuthCtx = {
+    const ctx: AuthCtx = {
       orgId: org.id,
-      clerkOrgId,
-      userId: membership.userId,
-      clerkUserId,
-      role: mapRole(membership.role as DbRole),
+      userId: claims.sub,
+      email: claims.email,
+      role: ROLE_MAP[mem.role as DbRole] ?? 'viewer',
       product: org.product as AuthProduct,
       outputLanguage,
-      kbPreference: org.kbPreference as AuthKbPreference,
+      kbPreference: (org.kbPreference ?? 'private_first') as AuthKbPreference,
     };
 
-    c.set("auth", authCtx);
+    c.set('auth', ctx);
     await next();
     return;
   };

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type StepDef = {
   readonly id: string;
@@ -64,7 +65,7 @@ export default function OnboardingPage(): JSX.Element {
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch('/api/onboarding/state');
+        const r = await apiFetch('/api/onboarding/state');
         if (!r.ok) return;
         const data = (await r.json()) as OnboardingState;
         if (cancelled) return;
@@ -91,7 +92,7 @@ export default function OnboardingPage(): JSX.Element {
     if (!current || busy) return;
     setBusy(true);
     try {
-      await fetch('/api/onboarding/step', {
+      await apiFetch('/api/onboarding/step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product: 'sommelier', step: current.id }),
@@ -101,7 +102,7 @@ export default function OnboardingPage(): JSX.Element {
       if (stepIdx + 1 < STEPS.length) {
         setStepIdx(stepIdx + 1);
       } else {
-        await fetch('/api/onboarding/complete', { method: 'POST' });
+        await apiFetch('/api/onboarding/complete', { method: 'POST' });
         setDone(true);
       }
     } finally {
@@ -113,9 +114,7 @@ export default function OnboardingPage(): JSX.Element {
     return (
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-2 text-3xl font-bold">Onboarding completado</h1>
-        <p className="text-gray-600">
-          Tu sala Wined está lista. Ve al dashboard para empezar.
-        </p>
+        <p className="text-gray-600">Tu sala Wined está lista. Ve al dashboard para empezar.</p>
       </div>
     );
   }
@@ -123,19 +122,13 @@ export default function OnboardingPage(): JSX.Element {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="mb-2 text-3xl font-bold">Bienvenido a Wined</h1>
-      <p className="mb-8 text-gray-600">
-        Configuremos tu sala en menos de 15 minutos.
-      </p>
+      <p className="mb-8 text-gray-600">Configuremos tu sala en menos de 15 minutos.</p>
 
       <div className="mb-8 flex gap-2">
         {STEPS.map((s, i) => {
           const isDone = completed[s.id];
           const isCurrent = i === stepIdx;
-          const cls = isDone
-            ? 'bg-wined-500'
-            : isCurrent
-              ? 'bg-wined-200'
-              : 'bg-gray-200';
+          const cls = isDone ? 'bg-wined-500' : isCurrent ? 'bg-wined-200' : 'bg-gray-200';
           return <div key={s.id} className={`h-2 flex-1 rounded-full ${cls}`} />;
         })}
       </div>

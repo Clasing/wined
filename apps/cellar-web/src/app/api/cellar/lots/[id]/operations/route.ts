@@ -1,21 +1,21 @@
 import type { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 
 const API_URL = process.env['WINED_API_URL'] ?? 'http://localhost:8787';
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const { getToken } = await auth();
-  const token = await getToken();
+  const auth = req.headers.get('authorization') ?? '';
+  const cookieHeader = req.headers.get('cookie') ?? '';
   const { id } = await ctx.params;
 
   const res = await fetch(`${API_URL}/v1/cellar/lots/${id}/operations`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(auth ? { Authorization: auth } : {}),
+      cookie: cookieHeader,
     },
   });
 
@@ -29,8 +29,8 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const { getToken } = await auth();
-  const token = await getToken();
+  const auth = req.headers.get('authorization') ?? '';
+  const cookieHeader = req.headers.get('cookie') ?? '';
   const { id } = await ctx.params;
   const body = await req.text();
 
@@ -38,7 +38,8 @@ export async function POST(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(auth ? { Authorization: auth } : {}),
+      cookie: cookieHeader,
     },
     body,
   });

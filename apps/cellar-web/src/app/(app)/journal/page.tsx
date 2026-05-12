@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
 type LotOp = {
   id: string;
@@ -21,7 +22,7 @@ export default function JournalPage() {
   const [ops, setOps] = useState<LotOp[]>([]);
 
   useEffect(() => {
-    fetch('/api/cellar/lots')
+    apiFetch('/api/cellar/lots')
       .then((r) => r.json())
       .then((d: { rows?: Lot[] }) => {
         const rows = d.rows ?? [];
@@ -33,7 +34,7 @@ export default function JournalPage() {
 
   useEffect(() => {
     if (!selectedLot) return;
-    fetch(`/api/cellar/lots/${selectedLot}/operations`)
+    apiFetch(`/api/cellar/lots/${selectedLot}/operations`)
       .then((r) => r.json())
       .then((d: { rows?: LotOp[] }) => setOps(d.rows ?? []))
       .catch(() => setOps([]));
@@ -57,15 +58,11 @@ export default function JournalPage() {
                     <button
                       onClick={() => setSelectedLot(l.id)}
                       className={`w-full text-left px-3 py-2 rounded ${
-                        active
-                          ? 'bg-cellar-50 text-cellar-700 font-medium'
-                          : 'hover:bg-gray-50'
+                        active ? 'bg-cellar-50 text-cellar-700 font-medium' : 'hover:bg-gray-50'
                       }`}
                     >
                       <div>{l.code ?? l.id.slice(0, 8)}</div>
-                      <div className="text-xs text-gray-500">
-                        {l.status ?? '—'}
-                      </div>
+                      <div className="text-xs text-gray-500">{l.status ?? '—'}</div>
                     </button>
                   </li>
                 );
@@ -87,12 +84,8 @@ export default function JournalPage() {
                   <div className="text-xs text-gray-500 mb-1">
                     {new Date(op.performedAt).toLocaleString('es-ES')}
                   </div>
-                  <div className="font-semibold capitalize">
-                    {op.opType.replace(/_/g, ' ')}
-                  </div>
-                  {op.notes && (
-                    <p className="text-sm mt-1 text-gray-700">{op.notes}</p>
-                  )}
+                  <div className="font-semibold capitalize">{op.opType.replace(/_/g, ' ')}</div>
+                  {op.notes && <p className="text-sm mt-1 text-gray-700">{op.notes}</p>}
                   {op.inputs && Object.keys(op.inputs).length > 0 && (
                     <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-x-auto">
                       {JSON.stringify(op.inputs, null, 2)}

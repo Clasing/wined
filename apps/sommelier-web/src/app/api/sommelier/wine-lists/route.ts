@@ -1,15 +1,16 @@
-import { auth } from '@clerk/nextjs/server';
+import type { NextRequest } from 'next/server';
 
 const API_URL = process.env['WINED_API_URL'] ?? 'http://localhost:8787';
 
-export async function GET(): Promise<Response> {
-  const { getToken } = await auth();
-  const token = await getToken();
+export async function GET(req: NextRequest): Promise<Response> {
+  const auth = req.headers.get('authorization') ?? '';
+  const cookieHeader = req.headers.get('cookie') ?? '';
 
   const res = await fetch(`${API_URL}/v1/sommelier/wine-lists`, {
     method: 'GET',
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(auth ? { Authorization: auth } : {}),
+      cookie: cookieHeader,
     },
   });
 
