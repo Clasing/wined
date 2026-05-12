@@ -16,8 +16,9 @@
 #   APIFY_API_TOKEN            apify_api_...
 #   RESEND_API_KEY             re_...
 #   WINED_HOST                  e.g. "wined.app.15.237.213.46.nip.io" hoy, "wined.app" cuando compres dominio
-
-name: wined
+#
+# NOTE: no top-level `name:` directive — Dokploy assigns its own project
+# name (appName + suffix). A static name here conflicts with that.
 
 x-common-env: &common-env
   NODE_ENV: production
