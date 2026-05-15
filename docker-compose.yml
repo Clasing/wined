@@ -117,29 +117,6 @@ services:
       - 'traefik.http.services.wined-minio.loadbalancer.server.port=9001'
 
   # ────────────────────────────────────────────────────────────
-  # LANGFUSE — LLM observability
-  # ────────────────────────────────────────────────────────────
-  langfuse:
-    image: langfuse/langfuse:latest
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://wined:${POSTGRES_PASSWORD}@postgres:5432/wined
-      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
-      SALT: ${LANGFUSE_SALT}
-      NEXTAUTH_URL: https://langfuse.${WINED_HOST:-wined.app.15.237.213.46.nip.io}
-      TELEMETRY_ENABLED: 'false'
-    networks:
-      - dokploy-network
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.wined-langfuse.rule=Host(`langfuse.${WINED_HOST:-wined.app.15.237.213.46.nip.io}`)'
-      - 'traefik.http.routers.wined-langfuse.entrypoints=web'
-      - 'traefik.http.services.wined-langfuse.loadbalancer.server.port=3000'
-
-  # ────────────────────────────────────────────────────────────
   # API — Hono backend
   # ────────────────────────────────────────────────────────────
   api:
