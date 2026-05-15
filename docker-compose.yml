@@ -45,7 +45,9 @@ x-common-env: &common-env
   POSTHOG_HOST: https://eu.posthog.com
   APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
-  WINED_API_URL: https://api.${WINED_HOST:-wined.app.15.237.213.46.nip.io}
+  # Internal DNS — Next.js server-side proxies stay inside dokploy-network.
+  # Avoids the (currently HTTP-only) public Traefik hop and the no-SSL gotcha.
+  WINED_API_URL: ${WINED_API_URL:-http://api:8787}
 
 services:
   # ────────────────────────────────────────────────────────────
