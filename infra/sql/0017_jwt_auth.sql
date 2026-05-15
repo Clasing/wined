@@ -1,7 +1,9 @@
 -- 0017_jwt_auth.sql
 -- Replace Clerk bridge columns with native JWT-based auth.
-
-BEGIN;
+-- NOTE: no explicit BEGIN/COMMIT — postgres.js (the runtime migrator's driver)
+-- disallows transaction control inside its raw multi-statement path.
+-- Each statement runs in its own implicit transaction. All are idempotent
+-- (IF EXISTS / IF NOT EXISTS) so re-running is safe.
 
 -- ===== USERS =====
 ALTER TABLE users
@@ -40,5 +42,3 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash ON refresh_tokens (token_hash);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens (user_id, revoked_at);
-
-COMMIT;
