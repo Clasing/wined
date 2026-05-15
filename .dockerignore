@@ -23,6 +23,7 @@
 !apps/*/Dockerfile
 !apps/*/Dockerfile.*
 infra/
+!infra/sql/
 SPEC.md
 PLAN.md
 CROSSCHECK.md
