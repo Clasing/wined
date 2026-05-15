@@ -42,6 +42,9 @@ ENV PORT=8787
 # Copy the full pruned + built workspace (deps are workspace-linked)
 COPY --from=builder --chown=wined:wined /repo/ ./
 
+# Migration SQL files (consumed by POST /api/v1/admin/db/migrate at bootstrap)
+COPY --chown=wined:wined infra/sql /app/infra/sql
+
 USER wined
 EXPOSE 8787
 

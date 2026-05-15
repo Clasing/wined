@@ -39,6 +39,11 @@ app.route('/health', healthRoute);
 // /me below is protected separately because it needs the auth ctx.
 app.route('/api/v1/auth', authRoute);
 
+// Bootstrap migration endpoint (secret-protected, outside JWT chain because
+// at first run there is no user/org yet). One-shot, idempotent.
+import { adminMigrateRoute } from './routes/admin-migrate.js';
+app.route('/api/v1/admin/db', adminMigrateRoute);
+
 // Protected routes: jwt → tenantGuard → rateLimit → disclaimer
 const protectedRoutes = new Hono();
 protectedRoutes.use('*', jwtAuth());
