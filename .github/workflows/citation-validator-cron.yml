@@ -1,7 +1,8 @@
 name: citation-validator-cron
 on:
-  schedule:
-    - cron: '0 5 * * *'   # daily at 05:00 UTC
+  # schedule disabled while Wined infra is parked (2026-05-18). Original schedule preserved below — uncomment the two `schedule:` lines to re-arm.
+  # schedule:
+  #   - cron: '0 5 * * *'   # daily at 05:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -16,7 +17,7 @@ jobs:
           node-version: '20.11.0'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @wined/api build
+      - run: pnpm exec turbo run build --filter=@wined/api
       - run: node apps/api/dist/workers/citation-validator-worker.js
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
