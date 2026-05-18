@@ -16,7 +16,7 @@ jobs:
           node-version: '20.11.0'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @wined/curators build
+      - run: pnpm exec turbo run build --filter=@wined/curators
       - run: pnpm --filter @wined/curators exec curators corpus-reviewer
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
